@@ -1,4 +1,11 @@
 ORG 0x0000
+    ; Temporary storage for macro register save/restore
+TEMP1:    DEFW 0
+TEMP2:    DEFW 0
+TEMP3:    DEFW 0
+TEMP4:    DEFW 0
+TEMP5:    DEFW 0
+TEMP6:    DEFW 0
     B START
 
 ; Memory addresses

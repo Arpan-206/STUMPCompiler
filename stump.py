@@ -14,7 +14,34 @@ class StumpMacroCompiler:
         
         # Expand macros
         expanded = self.expand_macros(lines)
-        
+        # Ensure TEMP1..TEMP6 are defined somewhere in the output. Many macros
+        # rely on these memory locations to save/restore registers. If the
+        # user's input didn't define them, insert definitions after the ORG
+        # directive (or at top) so the assembler won't complain.
+        joined = '\n'.join(expanded)
+        # Check which TEMP labels are actually defined (look for label definitions
+        # like "TEMP1:"). Users may reference TEMP1 in code; we must only add
+        # DEFW definitions when a TEMP label is not already defined. This avoids
+        # inserting duplicates and ensures missing temps are created.
+        missing = []
+        for i in range(1, 7):
+            if not re.search(rf'^\s*TEMP{i}:', joined, re.M):
+                missing.append(i)
+
+        if missing:
+            temp_defs = ["    ; Temporary storage for macro register save/restore"]
+            for i in missing:
+                temp_defs.append(f"TEMP{i}:    DEFW 0")
+
+            # Find ORG line to insert after, else prepend
+            insert_at = 0
+            for idx, l in enumerate(expanded):
+                if l.strip().upper().startswith('ORG'):
+                    insert_at = idx + 1
+                    break
+            for i, d in enumerate(temp_defs):
+                expanded.insert(insert_at + i, d)
+
         return '\n'.join(expanded)
     
     def expand_macros(self, lines):
