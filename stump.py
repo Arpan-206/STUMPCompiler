@@ -266,6 +266,18 @@ class StumpMacroCompiler:
             epilogue.append(f"    LD {reg}, [{scratch2}]")
         return prologue, epilogue
 
+    def load_label_nearby(self, label, dest_reg):
+        """Return assembly lines that load the numeric value of `label` into `dest_reg`
+
+        This emits a local DEFW pointer (`__PTR_<label>_<id>:`) immediately before
+        the LD instruction, then performs `LD dest_reg, __PTR_...`. Defining the
+        pointer adjacent to the LD keeps the assembler's PC-relative offset small.
+        """
+        lid = self._get_label_id()
+        ptr = f"__PTR_{label}_{lid}"
+        lines = [f"{ptr}:    DEFW {label}", f"    LD {dest_reg}, {ptr}"]
+        return lines
+
     def restore_regs(self, regs):
         """Return list of assembly lines that restore each register in `regs` from its TEMPn.
 
@@ -316,7 +328,7 @@ class StumpMacroCompiler:
         # Save caller-volatile registers we will use (local temps)
         prologue, epilogue = self.save_restore_pair(["R1", "R3"])
         result.extend(prologue)
-        result.append(f"    LD {lcd_reg}, LCD_BASE")
+        result.extend(self.load_label_nearby('LCD_BASE', lcd_reg))
 
         for i, char in enumerate(string):
             ascii_val = ord(char)
@@ -402,7 +414,7 @@ class StumpMacroCompiler:
         prologue, epilogue = self.save_restore_pair(["R1", "R2", "R3"])
         result.extend(prologue)
         result.extend([
-            "    LD R2, LCD_BASE",
+            *self.load_label_nearby('LCD_BASE', 'R2'),
             "    MOV R1, #8",
             "    ADD R1, R1, R1  ; 16",
             "    ADD R1, R1, R1  ; 32 (space)",
@@ -448,7 +460,7 @@ class StumpMacroCompiler:
         """Read from RTC - stores hours in R3, minutes in R4, seconds in R5"""
         return [
             "; Read from RTC",
-            "    LD R2, RTC_CONTROL",
+            *self.load_label_nearby('RTC_CONTROL', 'R2'),
             "    MOV R1, #1          ; Set Read Enable",
             "    ST R1, [R2]",
             "RTC_WAIT:",
@@ -460,11 +472,11 @@ class StumpMacroCompiler:
             "    MOV R1, #0",
             "    ST R1, [R2]",
             "    ; Load time values",
-            "    LD R2, RTC_HOURS",
+            *self.load_label_nearby('RTC_HOURS', 'R2'),
             "    LD R3, [R2]        ; R3 = hours (BCD)",
-            "    LD R2, RTC_MINUTES",
+            *self.load_label_nearby('RTC_MINUTES', 'R2'),
             "    LD R4, [R2]        ; R4 = minutes (BCD)",
-            "    LD R2, RTC_SECONDS",
+            *self.load_label_nearby('RTC_SECONDS', 'R2'),
             "    LD R5, [R2]        ; R5 = seconds (BCD)"
         ]
     
