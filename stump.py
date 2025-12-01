@@ -89,6 +89,17 @@ class StumpMacroCompiler:
         """Build any 8-bit value in a register"""
         result = []
         
+        # Never use R0, R7, or R8–R15 for value building
+        invalid_regs = ["R0", "R7"] + [f"R{i}" for i in range(8, 16)]
+        if reg in invalid_regs:
+            result.append(f"; ERROR: Attempt to use forbidden register {reg}")
+            return result
+
+        # Save register to memory before use
+        temp_map = {"R1": "TEMP1", "R2": "TEMP2", "R3": "TEMP3", "R4": "TEMP4", "R5": "TEMP5", "R6": "TEMP6"}
+        if reg in temp_map:
+            result.append(f"    ST {reg}, {temp_map[reg]}")
+
         if value <= 15:
             result.append(f"    MOV {reg}, #{value}")
         elif value <= 30:
@@ -152,7 +163,6 @@ class StumpMacroCompiler:
                 current = 0
                 result.append(f"    MOV {reg}, #15")
                 current = 15
-                
                 while current < value:
                     if value - current <= 15:
                         result.append(f"    ADD {reg}, {reg}, #{value - current}  ; {value}")
@@ -160,7 +170,9 @@ class StumpMacroCompiler:
                     else:
                         result.append(f"    ADD {reg}, {reg}, #15  ; {current + 15}")
                         current += 15
-        
+        # Restore register from memory after use
+        if reg in temp_map:
+            result.append(f"    LD {reg}, {temp_map[reg]}")
         return result
     
     def macro_print_string(self, args):
@@ -172,12 +184,13 @@ class StumpMacroCompiler:
         lcd_reg = args[1]
         
         result = [f"; Print string: \"{string}\""]
+        result.append(f"    ST R1, TEMP1")
+        result.append(f"    ST R3, TEMP3")
         result.append(f"    LD {lcd_reg}, LCD_BASE")
-        
+
         for i, char in enumerate(string):
             ascii_val = ord(char)
             result.extend(self.build_value(ascii_val, 'R1'))
-            
             if i == 0:
                 result.append(f"    ST R1, [{lcd_reg}]")
             else:
@@ -187,7 +200,8 @@ class StumpMacroCompiler:
                 else:
                     result.append(f"    ADD {lcd_reg}, {lcd_reg}, #1")
                     result.append(f"    ST R1, [{lcd_reg}]")
-        
+        result.append(f"    LD R1, TEMP1")
+        result.append(f"    LD R3, TEMP3")
         return result
     
     def macro_print_char(self, args):
@@ -200,14 +214,16 @@ class StumpMacroCompiler:
         offset = int(args[2])
         
         result = []
-        
+        result.append(f"    ST R1, TEMP1")
+        result.append(f"    ST R3, TEMP3")
+
         if char.startswith("'") and char.endswith("'"):
             ascii_val = ord(char[1])
             result.append(f"; Print '{char[1]}'")
             result.extend(self.build_value(ascii_val, 'R1'))
         else:
             result.append(f"    MOV R1, {char}")
-        
+
         if offset == 0:
             result.append(f"    ST R1, [{lcd_reg}]")
         elif offset <= 15:
@@ -215,7 +231,9 @@ class StumpMacroCompiler:
             result.append(f"    ST R1, [R3]")
         else:
             result.append(f"; Offset {offset} too large")
-        
+
+        result.append(f"    LD R1, TEMP1")
+        result.append(f"    LD R3, TEMP3")
         return result
     
     def macro_num_to_ascii(self, args):
@@ -246,6 +264,9 @@ class StumpMacroCompiler:
         """Clear LCD display"""
         return [
             "; Clear LCD",
+            "    ST R1, TEMP1",
+            "    ST R2, TEMP2",
+            "    ST R3, TEMP3",
             "    LD R2, LCD_BASE",
             "    MOV R1, #8",
             "    ADD R1, R1, R1  ; 16",
@@ -261,13 +282,18 @@ class StumpMacroCompiler:
             "    ST R1, [R2]",
             "    ADD R2, R2, #1",
             "    SUB R3, R3, #1",
-            "    BNE CLEAR_LOOP2"
+            "    BNE CLEAR_LOOP2",
+            "    LD R1, TEMP1",
+            "    LD R2, TEMP2",
+            "    LD R3, TEMP3"
         ]
     
     def macro_delay(self, args):
         """Insert delay loop"""
         return [
             "; Delay",
+            "    ST R5, TEMP5",
+            "    ST R6, TEMP6",
             "    MOV R5, #15",
             "DELAY_OUTER:",
             "    MOV R6, #15",
@@ -275,31 +301,33 @@ class StumpMacroCompiler:
             "    SUB R6, R6, #1",
             "    BNE DELAY_INNER",
             "    SUB R5, R5, #1",
-            "    BNE DELAY_OUTER"
+            "    BNE DELAY_OUTER",
+            "    LD R5, TEMP5",
+            "    LD R6, TEMP6"
         ]
     
     def macro_rtc_read(self, args):
-        """Read from RTC - stores hours in R10, minutes in R11, seconds in R12"""
+        """Read from RTC - stores hours in R3, minutes in R4, seconds in R5"""
         return [
             "; Read from RTC",
-            "    LD R8, RTC_CONTROL",
+            "    LD R2, RTC_CONTROL",
             "    MOV R1, #1          ; Set Read Enable",
-            "    ST R1, [R8]",
+            "    ST R1, [R2]",
             "RTC_WAIT:",
-            "    LD R1, [R8]",
-            "    MOV R2, #2",
-            "    AND R2, R1, R2      ; Check Busy flag (bit 1)",
+            "    LD R1, [R2]",
+            "    MOV R3, #2",
+            "    AND R3, R1, R3      ; Check Busy flag (bit 1)",
             "    BNE RTC_WAIT",
             "    ; Read complete, clear Read Enable",
             "    MOV R1, #0",
-            "    ST R1, [R8]",
+            "    ST R1, [R2]",
             "    ; Load time values",
-            "    LD R8, RTC_HOURS",
-            "    LD R10, [R8]        ; R10 = hours (BCD)",
-            "    LD R8, RTC_MINUTES",
-            "    LD R11, [R8]        ; R11 = minutes (BCD)",
-            "    LD R8, RTC_SECONDS",
-            "    LD R12, [R8]        ; R12 = seconds (BCD)"
+            "    LD R2, RTC_HOURS",
+            "    LD R3, [R2]        ; R3 = hours (BCD)",
+            "    LD R2, RTC_MINUTES",
+            "    LD R4, [R2]        ; R4 = minutes (BCD)",
+            "    LD R2, RTC_SECONDS",
+            "    LD R5, [R2]        ; R5 = seconds (BCD)"
         ]
     
     def macro_bcd_to_digits(self, args):
@@ -311,6 +339,10 @@ class StumpMacroCompiler:
         bcd_reg = args[0]
         tens_reg = args[1]
         units_reg = args[2]
+        # Prevent forbidden registers
+        invalid_regs = ["R0", "R7"] + [f"R{i}" for i in range(8, 16)]
+        if bcd_reg in invalid_regs or tens_reg in invalid_regs or units_reg in invalid_regs:
+            return [f"; ERROR: Forbidden register used in @BCD_TO_DIGITS: {bcd_reg}, {tens_reg}, {units_reg}"]
         
         return [
             f"; Convert BCD in {bcd_reg} to digits",
@@ -338,6 +370,10 @@ class StumpMacroCompiler:
         bcd_reg = args[0]
         lcd_reg = args[1]
         offset = int(args[2])
+        # Prevent forbidden registers
+        invalid_regs = ["R0", "R7"] + [f"R{i}" for i in range(8, 16)]
+        if bcd_reg in invalid_regs or lcd_reg in invalid_regs:
+            return [f"; ERROR: Forbidden register used in @DISPLAY_BCD_BYTE: {bcd_reg}, {lcd_reg}"]
         
         result = [f"; Display BCD byte from {bcd_reg} at offset {offset}"]
         
