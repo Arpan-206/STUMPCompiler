@@ -10,7 +10,8 @@ TEMP1:       DEFW 0
 START:
     ; Print the name to the LCD (uses R2 as the LCD pointer register)
 ; Print string: "arpan"
-    LD R2, LCD_BASE
+__PTR_LCD_BASE_1:    DEFW LCD_BASE
+    LD R2, __PTR_LCD_BASE_1
     MOV R1, #15
     ADD R1, R1, #15
     ADD R1, R1, #15
@@ -62,8 +63,8 @@ START:
     ; --- SAVE/RESTORE test ---
     ; Put a known value in R1, save it to TEMP1, clobber R1, then restore
     MOV R1, #7
-__PTR_TEMP1_1:    DEFW TEMP1
-    LD R3, __PTR_TEMP1_1
+__PTR_TEMP1_2:    DEFW TEMP1
+    LD R3, __PTR_TEMP1_2
     ST R1, [R3]
     ; put 'A' (65) in R1 using the macro
     MOV R1, #15
@@ -72,15 +73,16 @@ __PTR_TEMP1_1:    DEFW TEMP1
     ADD R1, R1, #15
     ADD R1, R1, #5
 ; Print string: "A"
-    LD R2, LCD_BASE
+__PTR_LCD_BASE_3:    DEFW LCD_BASE
+    LD R2, __PTR_LCD_BASE_3
     MOV R1, #15
     ADD R1, R1, #15
     ADD R1, R1, #15
     ADD R1, R1, #15
     ADD R1, R1, #5
     ST R1, [R2]
-__PTR_TEMP1_2:    DEFW TEMP1
-    LD R3, __PTR_TEMP1_2
+__PTR_TEMP1_4:    DEFW TEMP1
+    LD R3, __PTR_TEMP1_4
     LD R1, [R3]
 
     ; Stop here

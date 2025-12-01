@@ -91,7 +91,8 @@ class StumpMacroCompiler:
         string = args[0]
         lcd_reg = args[1]
         out = [f"; Print string: \"{string}\""]
-        out.append(f"    LD {lcd_reg}, LCD_BASE")
+        # Load LCD_BASE via a nearby pointer to avoid PC-relative offset limits
+        out.extend(self._load_label_nearby('LCD_BASE', lcd_reg))
         for i,ch in enumerate(string):
             out.extend(self.build_value(ord(ch),'R1'))
             if i == 0:
@@ -162,7 +163,7 @@ class StumpMacroCompiler:
     def macro_clear_lcd(self, args):
         return [
             "; Clear LCD",
-            "    LD R2, LCD_BASE",
+                *self._load_label_nearby('LCD_BASE', 'R2'),
             "    MOV R1, #8",
             "    ADD R1, R1, R1",
             "    ADD R1, R1, R1",
