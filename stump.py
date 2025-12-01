@@ -262,6 +262,7 @@ class StumpMacroCompiler:
     
     def macro_clear_lcd(self, args):
         """Clear LCD display"""
+        lid = self._get_label_id()
         return [
             "; Clear LCD",
             "    ST R1, TEMP1",
@@ -272,17 +273,17 @@ class StumpMacroCompiler:
             "    ADD R1, R1, R1  ; 16",
             "    ADD R1, R1, R1  ; 32 (space)",
             "    MOV R3, #15",
-            "CLEAR_LOOP1:",
+            f"CLEAR_LOOP1_{lid}:",
             "    ST R1, [R2]",
             "    ADD R2, R2, #1",
             "    SUB R3, R3, #1",
-            "    BNE CLEAR_LOOP1",
+            f"    BNE CLEAR_LOOP1_{lid}",
             "    MOV R3, #5",
-            "CLEAR_LOOP2:",
+            f"CLEAR_LOOP2_{lid}:",
             "    ST R1, [R2]",
             "    ADD R2, R2, #1",
             "    SUB R3, R3, #1",
-            "    BNE CLEAR_LOOP2",
+            f"    BNE CLEAR_LOOP2_{lid}",
             "    LD R1, TEMP1",
             "    LD R2, TEMP2",
             "    LD R3, TEMP3"
@@ -290,18 +291,19 @@ class StumpMacroCompiler:
     
     def macro_delay(self, args):
         """Insert delay loop"""
+        lid = self._get_label_id()
         return [
             "; Delay",
             "    ST R5, TEMP5",
             "    ST R6, TEMP6",
             "    MOV R5, #15",
-            "DELAY_OUTER:",
+            f"DELAY_OUTER_{lid}:",
             "    MOV R6, #15",
-            "DELAY_INNER:",
+            f"DELAY_INNER_{lid}:",
             "    SUB R6, R6, #1",
-            "    BNE DELAY_INNER",
+            f"    BNE DELAY_INNER_{lid}",
             "    SUB R5, R5, #1",
-            "    BNE DELAY_OUTER",
+            f"    BNE DELAY_OUTER_{lid}",
             "    LD R5, TEMP5",
             "    LD R6, TEMP6"
         ]
@@ -344,6 +346,7 @@ class StumpMacroCompiler:
         if bcd_reg in invalid_regs or tens_reg in invalid_regs or units_reg in invalid_regs:
             return [f"; ERROR: Forbidden register used in @BCD_TO_DIGITS: {bcd_reg}, {tens_reg}, {units_reg}"]
         
+        lid = self._get_label_id()
         return [
             f"; Convert BCD in {bcd_reg} to digits",
             f"    MOV {tens_reg}, {bcd_reg}",
@@ -351,15 +354,15 @@ class StumpMacroCompiler:
             f"    AND {units_reg}, {bcd_reg}, {units_reg}  ; Units = bcd & 0x0F",
             "    ; Divide by 16 to get tens digit",
             f"    MOV {tens_reg}, #0",
-            f"BCD_DIV_{self.label_counter}:",
+            f"BCD_DIV_{lid}:",
             f"    SUBS R0, {bcd_reg}, #15  ; Compare with 15",
-            f"    BLE BCD_DONE_{self.label_counter}  ; If <= 15, done",
+            f"    BLE BCD_DONE_{lid}  ; If <= 15, done",
             f"    SUB {bcd_reg}, {bcd_reg}, #15",
             f"    SUB {bcd_reg}, {bcd_reg}, #1    ; -16 total",
             f"    ADD {tens_reg}, {tens_reg}, #1",
-            f"    B BCD_DIV_{self.label_counter}",
-            f"BCD_DONE_{self.label_counter}:"
-        ] + self._increment_label()
+            f"    B BCD_DIV_{lid}",
+            f"BCD_DONE_{lid}:"
+        ]
     
     def macro_display_bcd_byte(self, args):
         """Display a BCD byte as two digits at LCD position
@@ -375,20 +378,21 @@ class StumpMacroCompiler:
         if bcd_reg in invalid_regs or lcd_reg in invalid_regs:
             return [f"; ERROR: Forbidden register used in @DISPLAY_BCD_BYTE: {bcd_reg}, {lcd_reg}"]
         
+        lid = self._get_label_id()
         result = [f"; Display BCD byte from {bcd_reg} at offset {offset}"]
         
         # Extract tens digit (upper nibble)
         result += [
             f"    MOV R4, {bcd_reg}",
             "    MOV R5, #0          ; Tens counter",
-            f"TENS_LOOP_{self.label_counter}:",
+            f"TENS_LOOP_{lid}:",
             "    SUBS R0, R4, #15    ; Compare R4 with 15",
-            f"    BLE TENS_DONE_{self.label_counter}  ; If R4 <= 15, done",
+            f"    BLE TENS_DONE_{lid}  ; If R4 <= 15, done",
             "    SUB R4, R4, #15",
             "    SUB R4, R4, #1      ; -16 total",
             "    ADD R5, R5, #1",
-            f"    B TENS_LOOP_{self.label_counter}",
-            f"TENS_DONE_{self.label_counter}:",
+            f"    B TENS_LOOP_{lid}",
+            f"TENS_DONE_{lid}:",
             "    ; Convert tens to ASCII",
             "    MOV R1, #12",
             "    ADD R1, R1, R1      ; 24",
@@ -420,8 +424,6 @@ class StumpMacroCompiler:
             result.append(f"    ST R1, [R3]")
         else:
             result.append(f"; Offset too large")
-        
-        self._increment_label()
         return result
     
     def macro_display_time(self, args):
@@ -454,6 +456,16 @@ class StumpMacroCompiler:
         """Increment label counter and return empty list"""
         self.label_counter += 1
         return []
+
+    def _get_label_id(self):
+        """Return a new unique label id (integer) for use as a suffix.
+
+        Use this to create non-colliding labels inside macros, e.g.
+        lid = self._get_label_id(); f"LOOP_{lid}:" and branches to
+        "LOOP_{lid}". This keeps labels unique across macro expansions.
+        """
+        self.label_counter += 1
+        return str(self.label_counter)
 
 def main():
     if len(sys.argv) != 2:
