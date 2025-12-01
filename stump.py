@@ -122,16 +122,9 @@ class StumpMacroCompiler:
             result.append(f"; ERROR: Attempt to use forbidden register {reg}")
             return result
 
-        # Save register to memory before use
-        temp_map = {"R1": "TEMP1", "R2": "TEMP2", "R3": "TEMP3", "R4": "TEMP4", "R5": "TEMP5", "R6": "TEMP6"}
-        if reg in temp_map:
-            # Use an intermediate scratch register to perform memory writes via
-            # an address load. This avoids assembler "offset out of range"
-            # errors with direct absolute stores. Prefer R3 unless it's the
-            # register we're saving, in which case use R4.
-            scratch = 'R3' if reg != 'R3' else 'R4'
-            result.append(f"    LD {scratch}, {temp_map[reg]}")
-            result.append(f"    ST {reg}, [{scratch}]")
+        # Save register to memory before use using centralized helper
+        if reg in ["R1", "R2", "R3", "R4", "R5", "R6"]:
+            result.extend(self.save_regs([reg]))
 
         if value <= 15:
             result.append(f"    MOV {reg}, #{value}")
@@ -203,12 +196,86 @@ class StumpMacroCompiler:
                     else:
                         result.append(f"    ADD {reg}, {reg}, #15  ; {current + 15}")
                         current += 15
-        # Restore register from memory after use (via scratch)
-        if reg in temp_map:
-            scratch = 'R3' if reg != 'R3' else 'R4'
-            result.append(f"    LD {scratch}, {temp_map[reg]}")
-            result.append(f"    LD {reg}, [{scratch}]")
+        # Restore register from memory after use using centralized helper
+        if reg in ["R1", "R2", "R3", "R4", "R5", "R6"]:
+            result.extend(self.restore_regs([reg]))
         return result
+
+    # --- Register save/restore helpers ---
+    def reg_is_forbidden(self, reg):
+        invalid_regs = ["R0", "R7"] + [f"R{i}" for i in range(8, 16)]
+        return reg in invalid_regs
+
+    def reg_to_temp(self, reg):
+        mapping = {"R1": "TEMP1", "R2": "TEMP2", "R3": "TEMP3", "R4": "TEMP4", "R5": "TEMP5", "R6": "TEMP6"}
+        return mapping.get(reg)
+
+    def _pick_scratch(self, avoid_regs):
+        """Pick a scratch register not in avoid_regs and not forbidden."""
+        candidates = [f"R{i}" for i in range(3, 7)] + ["R1", "R2"]
+        for c in candidates:
+            if c not in avoid_regs and not self.reg_is_forbidden(c):
+                return c
+        # Fallback (shouldn't happen in normal macro usage)
+        return "R3"
+
+    def save_regs(self, regs):
+        """Return list of assembly lines that save each register in `regs` to its TEMPn.
+
+        Uses an indirect store via a picked scratch register (LD scratch, TEMPn; ST reg, [scratch])
+        to avoid assembler absolute-offset range issues.
+        """
+        lines = []
+        avoid = set(regs)
+        for reg in regs:
+            temp = self.reg_to_temp(reg)
+            if not temp:
+                # Nothing to do for registers without TEMP mapping
+                continue
+            scratch = self._pick_scratch(avoid)
+            # Each save uses its own scratch selection to ensure we don't clobber
+            # a register that we're saving.
+            lines.append(f"    LD {scratch}, {temp}")
+            lines.append(f"    ST {reg}, [{scratch}]")
+        return lines
+
+    def restore_regs(self, regs):
+        """Return list of assembly lines that restore each register in `regs` from its TEMPn.
+
+        Uses the same indirect addressing pattern as `save_regs`.
+        """
+        lines = []
+        avoid = set(regs)
+        for reg in regs:
+            temp = self.reg_to_temp(reg)
+            if not temp:
+                continue
+            scratch = self._pick_scratch(avoid)
+            lines.append(f"    LD {scratch}, {temp}")
+            lines.append(f"    LD {reg}, [{scratch}]")
+        return lines
+
+    # --- Offset helpers ---
+    def offset_in_range(self, offset):
+        """Return True if offset is within assembler immediate range (-16..15)."""
+        return -16 <= offset <= 15
+
+    def indexed_address_lines(self, base_reg, offset, addr_reg='R3'):
+        """Return assembly lines that compute address (base_reg + offset) into addr_reg.
+
+        If offset == 0, returns an empty list (caller can use [base_reg] directly).
+        If offset positive, emits `ADD addr_reg, base_reg, #offset`.
+        If offset negative, emits `SUB addr_reg, base_reg, #{-offset}`.
+        Returns None if offset out of range.
+        """
+        if offset == 0:
+            return []
+        if not self.offset_in_range(offset):
+            return None
+        if offset > 0:
+            return [f"    ADD {addr_reg}, {base_reg}, #{offset}"]
+        else:
+            return [f"    SUB {addr_reg}, {base_reg}, #{-offset}"]
     
     def macro_print_string(self, args):
         """Print string at LCD position"""
@@ -219,8 +286,8 @@ class StumpMacroCompiler:
         lcd_reg = args[1]
         
         result = [f"; Print string: \"{string}\""]
-        result.append(f"    ST R1, TEMP1")
-        result.append(f"    ST R3, TEMP3")
+        # Save caller-volatile registers we will use
+        result.extend(self.save_regs(["R1", "R3"]))
         result.append(f"    LD {lcd_reg}, LCD_BASE")
 
         for i, char in enumerate(string):
@@ -235,8 +302,7 @@ class StumpMacroCompiler:
                 else:
                     result.append(f"    ADD {lcd_reg}, {lcd_reg}, #1")
                     result.append(f"    ST R1, [{lcd_reg}]")
-        result.append(f"    LD R1, TEMP1")
-        result.append(f"    LD R3, TEMP3")
+        result.extend(self.restore_regs(["R1", "R3"]))
         return result
     
     def macro_print_char(self, args):
@@ -249,8 +315,8 @@ class StumpMacroCompiler:
         offset = int(args[2])
         
         result = []
-        result.append(f"    ST R1, TEMP1")
-        result.append(f"    ST R3, TEMP3")
+        # Save registers we'll use
+        result.extend(self.save_regs(["R1", "R3"]))
 
         if char.startswith("'") and char.endswith("'"):
             ascii_val = ord(char[1])
@@ -259,16 +325,18 @@ class StumpMacroCompiler:
         else:
             result.append(f"    MOV R1, {char}")
 
-        if offset == 0:
-            result.append(f"    ST R1, [{lcd_reg}]")
-        elif offset <= 15:
-            result.append(f"    ADD R3, {lcd_reg}, #{offset}")
-            result.append(f"    ST R1, [R3]")
+        # Handle offset within assembler signed immediate range (-16..15)
+        addr_lines = self.indexed_address_lines(lcd_reg, offset, addr_reg='R3')
+        if addr_lines is None:
+            result.append(f"; Offset {offset} out of range (-16..15)")
         else:
-            result.append(f"; Offset {offset} too large")
+            if offset == 0:
+                result.append(f"    ST R1, [{lcd_reg}]")
+            else:
+                result.extend(addr_lines)
+                result.append(f"    ST R1, [R3]")
 
-        result.append(f"    LD R1, TEMP1")
-        result.append(f"    LD R3, TEMP3")
+        result.extend(self.restore_regs(["R1", "R3"]))
         return result
     
     def macro_num_to_ascii(self, args):
@@ -298,11 +366,12 @@ class StumpMacroCompiler:
     def macro_clear_lcd(self, args):
         """Clear LCD display"""
         lid = self._get_label_id()
-        return [
+        result = [
             "; Clear LCD",
-            "    ST R1, TEMP1",
-            "    ST R2, TEMP2",
-            "    ST R3, TEMP3",
+        ]
+        # Save registers we will clobber
+        result.extend(self.save_regs(["R1", "R2", "R3"]))
+        result.extend([
             "    LD R2, LCD_BASE",
             "    MOV R1, #8",
             "    ADD R1, R1, R1  ; 16",
@@ -319,18 +388,19 @@ class StumpMacroCompiler:
             "    ADD R2, R2, #1",
             "    SUB R3, R3, #1",
             f"    BNE CLEAR_LOOP2_{lid}",
-            "    LD R1, TEMP1",
-            "    LD R2, TEMP2",
-            "    LD R3, TEMP3"
-        ]
+        ])
+        # Restore saved registers
+        result.extend(self.restore_regs(["R1", "R2", "R3"]))
+        return result
     
     def macro_delay(self, args):
         """Insert delay loop"""
         lid = self._get_label_id()
-        return [
+        result = [
             "; Delay",
-            "    ST R5, TEMP5",
-            "    ST R6, TEMP6",
+        ]
+        result.extend(self.save_regs(["R5", "R6"]))
+        result.extend([
             "    MOV R5, #15",
             f"DELAY_OUTER_{lid}:",
             "    MOV R6, #15",
@@ -339,9 +409,9 @@ class StumpMacroCompiler:
             f"    BNE DELAY_INNER_{lid}",
             "    SUB R5, R5, #1",
             f"    BNE DELAY_OUTER_{lid}",
-            "    LD R5, TEMP5",
-            "    LD R6, TEMP6"
-        ]
+        ])
+        result.extend(self.restore_regs(["R5", "R6"]))
+        return result
     
     def macro_rtc_read(self, args):
         """Read from RTC - stores hours in R3, minutes in R4, seconds in R5"""
@@ -453,12 +523,17 @@ class StumpMacroCompiler:
             "    ADD R1, R1, R5      ; Add units digit",
         ]
         
-        # Store units digit
-        if offset + 1 <= 15:
-            result.append(f"    ADD R3, {lcd_reg}, #{offset + 1}")
-            result.append(f"    ST R1, [R3]")
+        # Store units digit — validate offset+1 in range
+        units_off = offset + 1
+        addr_lines = self.indexed_address_lines(lcd_reg, units_off, addr_reg='R3')
+        if addr_lines is None:
+            result.append(f"; Offset {units_off} out of range (-16..15)")
         else:
-            result.append(f"; Offset too large")
+            if units_off == 0:
+                result.append(f"    ST R1, [{lcd_reg}]")
+            else:
+                result.extend(addr_lines)
+                result.append(f"    ST R1, [R3]")
         return result
     
     def macro_display_time(self, args):

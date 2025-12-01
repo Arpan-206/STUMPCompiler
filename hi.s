@@ -22,9 +22,12 @@ RTC_CONTROL:  DEFW 0xFF9F
 START:
     ; Clear the LCD display
 ; Clear LCD
-    ST R1, TEMP1
-    ST R2, TEMP2
-    ST R3, TEMP3
+    LD R4, TEMP1
+    ST R1, [R4]
+    LD R4, TEMP2
+    ST R2, [R4]
+    LD R4, TEMP3
+    ST R3, [R4]
     LD R2, LCD_BASE
     MOV R1, #8
     ADD R1, R1, R1  ; 16
@@ -41,14 +44,19 @@ CLEAR_LOOP2_1:
     ADD R2, R2, #1
     SUB R3, R3, #1
     BNE CLEAR_LOOP2_1
-    LD R1, TEMP1
-    LD R2, TEMP2
-    LD R3, TEMP3
+    LD R4, TEMP1
+    LD R1, [R4]
+    LD R4, TEMP2
+    LD R2, [R4]
+    LD R4, TEMP3
+    LD R3, [R4]
 
     ; Display "Clock v1.0" on first line
 ; Print string: "   CLOCK v1.0   "
-    ST R1, TEMP1
-    ST R3, TEMP3
+    LD R4, TEMP1
+    ST R1, [R4]
+    LD R4, TEMP3
+    ST R3, [R4]
     LD R2, LCD_BASE
     LD R3, TEMP1
     ST R1, [R3]
@@ -210,13 +218,17 @@ CLEAR_LOOP2_1:
     LD R1, [R3]
     ADD R3, R2, #15
     ST R1, [R3]
-    LD R1, TEMP1
-    LD R3, TEMP3
+    LD R4, TEMP1
+    LD R1, [R4]
+    LD R4, TEMP3
+    LD R3, [R4]
 
     ; Small startup delay
 ; Delay
-    ST R5, TEMP5
-    ST R6, TEMP6
+    LD R3, TEMP5
+    ST R5, [R3]
+    LD R3, TEMP6
+    ST R6, [R3]
     MOV R5, #15
 DELAY_OUTER_2:
     MOV R6, #15
@@ -225,8 +237,10 @@ DELAY_INNER_2:
     BNE DELAY_INNER_2
     SUB R5, R5, #1
     BNE DELAY_OUTER_2
-    LD R5, TEMP5
-    LD R6, TEMP6
+    LD R3, TEMP5
+    LD R5, [R3]
+    LD R3, TEMP6
+    LD R6, [R3]
 
 MAIN_LOOP:
     ; Read current time from RTC
@@ -257,8 +271,10 @@ RTC_WAIT:
     ADD R2, R2, R3
     ADD R2, R2, #5      ; R2 now points to LCD line 2 (offset 20)
 ; Print string: "Time: "
-    ST R1, TEMP1
-    ST R3, TEMP3
+    LD R4, TEMP1
+    ST R1, [R4]
+    LD R4, TEMP3
+    ST R3, [R4]
     LD R2, LCD_BASE
     LD R3, TEMP1
     ST R1, [R3]
@@ -322,8 +338,10 @@ RTC_WAIT:
     LD R1, [R3]
     ADD R3, R2, #5
     ST R1, [R3]
-    LD R1, TEMP1
-    LD R3, TEMP3
+    LD R4, TEMP1
+    LD R1, [R4]
+    LD R4, TEMP3
+    LD R3, [R4]
 
     ; Now display the actual time using the BCD values
     ; Get LCD position after "Time: " (offset 26)
@@ -336,8 +354,10 @@ RTC_WAIT:
 ; ERROR: Forbidden register used in @DISPLAY_BCD_BYTE: R10, R2
 
     ; Display first colon
-    ST R1, TEMP1
-    ST R3, TEMP3
+    LD R4, TEMP1
+    ST R1, [R4]
+    LD R4, TEMP3
+    ST R3, [R4]
 ; Print ':'
     LD R3, TEMP1
     ST R1, [R3]
@@ -349,15 +369,19 @@ RTC_WAIT:
     LD R1, [R3]
     ADD R3, R2, #2
     ST R1, [R3]
-    LD R1, TEMP1
-    LD R3, TEMP3
+    LD R4, TEMP1
+    LD R1, [R4]
+    LD R4, TEMP3
+    LD R3, [R4]
 
     ; Display minutes (R11 contains BCD minutes)
 ; ERROR: Forbidden register used in @DISPLAY_BCD_BYTE: R11, R2
 
     ; Display second colon
-    ST R1, TEMP1
-    ST R3, TEMP3
+    LD R4, TEMP1
+    ST R1, [R4]
+    LD R4, TEMP3
+    ST R3, [R4]
 ; Print ':'
     LD R3, TEMP1
     ST R1, [R3]
@@ -369,16 +393,20 @@ RTC_WAIT:
     LD R1, [R3]
     ADD R3, R2, #5
     ST R1, [R3]
-    LD R1, TEMP1
-    LD R3, TEMP3
+    LD R4, TEMP1
+    LD R1, [R4]
+    LD R4, TEMP3
+    LD R3, [R4]
 
     ; Display seconds (R12 contains BCD seconds)
 ; ERROR: Forbidden register used in @DISPLAY_BCD_BYTE: R12, R2
 
     ; Short delay before next update
 ; Delay
-    ST R5, TEMP5
-    ST R6, TEMP6
+    LD R3, TEMP5
+    ST R5, [R3]
+    LD R3, TEMP6
+    ST R6, [R3]
     MOV R5, #15
 DELAY_OUTER_3:
     MOV R6, #15
@@ -387,8 +415,10 @@ DELAY_INNER_3:
     BNE DELAY_INNER_3
     SUB R5, R5, #1
     BNE DELAY_OUTER_3
-    LD R5, TEMP5
-    LD R6, TEMP6
+    LD R3, TEMP5
+    LD R5, [R3]
+    LD R3, TEMP6
+    LD R6, [R3]
 
     ; Loop forever
     B MAIN_LOOP
