@@ -8,6 +8,8 @@ LCD_BASE:    DEFW 0xFF40
 TEMP1:       DEFW 0
 
 START:
+    @CLEAR_LCD
+
     ; Print the name to the LCD (uses R2 as the LCD pointer register)
     @PRINT_STRING "arpan" R2
 
