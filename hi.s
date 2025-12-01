@@ -50,79 +50,98 @@ CLEAR_LOOP2_1:
     ST R1, TEMP1
     ST R3, TEMP3
     LD R2, LCD_BASE
-    ST R1, TEMP1
+    LD R3, TEMP1
+    ST R1, [R3]
     MOV R1, #8
     ADD R1, R1, R1  ; 16
     ADD R1, R1, R1  ; 32
-    LD R1, TEMP1
+    LD R3, TEMP1
+    LD R1, [R3]
     ST R1, [R2]
-    ST R1, TEMP1
+    LD R3, TEMP1
+    ST R1, [R3]
     MOV R1, #8
     ADD R1, R1, R1  ; 16
     ADD R1, R1, R1  ; 32
-    LD R1, TEMP1
+    LD R3, TEMP1
+    LD R1, [R3]
     ADD R3, R2, #1
     ST R1, [R3]
-    ST R1, TEMP1
+    LD R3, TEMP1
+    ST R1, [R3]
     MOV R1, #8
     ADD R1, R1, R1  ; 16
     ADD R1, R1, R1  ; 32
-    LD R1, TEMP1
+    LD R3, TEMP1
+    LD R1, [R3]
     ADD R3, R2, #2
     ST R1, [R3]
-    ST R1, TEMP1
+    LD R3, TEMP1
+    ST R1, [R3]
     MOV R1, #8
     ADD R1, R1, R1  ; 16
     ADD R1, R1, R1  ; 32
     ADD R1, R1, R1  ; 64
     ADD R1, R1, #3  ; 67
-    LD R1, TEMP1
+    LD R3, TEMP1
+    LD R1, [R3]
     ADD R3, R2, #3
     ST R1, [R3]
-    ST R1, TEMP1
+    LD R3, TEMP1
+    ST R1, [R3]
     MOV R1, #8
     ADD R1, R1, R1  ; 16
     ADD R1, R1, R1  ; 32
     ADD R1, R1, R1  ; 64
     ADD R1, R1, #12  ; 76
-    LD R1, TEMP1
+    LD R3, TEMP1
+    LD R1, [R3]
     ADD R3, R2, #4
     ST R1, [R3]
-    ST R1, TEMP1
+    LD R3, TEMP1
+    ST R1, [R3]
     MOV R1, #8
     ADD R1, R1, R1  ; 16
     ADD R1, R1, R1  ; 32
     ADD R1, R1, R1  ; 64
     ADD R1, R1, #15  ; 79
-    LD R1, TEMP1
+    LD R3, TEMP1
+    LD R1, [R3]
     ADD R3, R2, #5
     ST R1, [R3]
-    ST R1, TEMP1
+    LD R3, TEMP1
+    ST R1, [R3]
     MOV R1, #8
     ADD R1, R1, R1  ; 16
     ADD R1, R1, R1  ; 32
     ADD R1, R1, R1  ; 64
     ADD R1, R1, #3  ; 67
-    LD R1, TEMP1
+    LD R3, TEMP1
+    LD R1, [R3]
     ADD R3, R2, #6
     ST R1, [R3]
-    ST R1, TEMP1
+    LD R3, TEMP1
+    ST R1, [R3]
     MOV R1, #8
     ADD R1, R1, R1  ; 16
     ADD R1, R1, R1  ; 32
     ADD R1, R1, R1  ; 64
     ADD R1, R1, #11  ; 75
-    LD R1, TEMP1
+    LD R3, TEMP1
+    LD R1, [R3]
     ADD R3, R2, #7
     ST R1, [R3]
-    ST R1, TEMP1
+    LD R3, TEMP1
+    ST R1, [R3]
     MOV R1, #8
     ADD R1, R1, R1  ; 16
     ADD R1, R1, R1  ; 32
-    LD R1, TEMP1
+    LD R3, TEMP1
+    LD R1, [R3]
     ADD R3, R2, #8
     ST R1, [R3]
-    ST R1, TEMP1
+    LD R3, TEMP1
+    ST R1, [R3]
     MOV R1, #15
     ADD R1, R1, #15  ; 30
     ADD R1, R1, #15  ; 45
@@ -131,51 +150,64 @@ CLEAR_LOOP2_1:
     ADD R1, R1, #15  ; 90
     ADD R1, R1, #15  ; 105
     ADD R1, R1, #13  ; 118
-    LD R1, TEMP1
+    LD R3, TEMP1
+    LD R1, [R3]
     ADD R3, R2, #9
     ST R1, [R3]
-    ST R1, TEMP1
+    LD R3, TEMP1
+    ST R1, [R3]
     MOV R1, #12
     ADD R1, R1, R1  ; 24
     ADD R1, R1, R1  ; 48
     ADD R1, R1, #1
-    LD R1, TEMP1
+    LD R3, TEMP1
+    LD R1, [R3]
     ADD R3, R2, #10
     ST R1, [R3]
-    ST R1, TEMP1
+    LD R3, TEMP1
+    ST R1, [R3]
     MOV R1, #15
     ADD R1, R1, #15  ; 30
     ADD R1, R1, #15  ; 45
     ADD R1, R1, #1  ; 46
-    LD R1, TEMP1
+    LD R3, TEMP1
+    LD R1, [R3]
     ADD R3, R2, #11
     ST R1, [R3]
-    ST R1, TEMP1
+    LD R3, TEMP1
+    ST R1, [R3]
     MOV R1, #12
     ADD R1, R1, R1  ; 24
     ADD R1, R1, R1  ; 48
-    LD R1, TEMP1
+    LD R3, TEMP1
+    LD R1, [R3]
     ADD R3, R2, #12
     ST R1, [R3]
-    ST R1, TEMP1
+    LD R3, TEMP1
+    ST R1, [R3]
     MOV R1, #8
     ADD R1, R1, R1  ; 16
     ADD R1, R1, R1  ; 32
-    LD R1, TEMP1
+    LD R3, TEMP1
+    LD R1, [R3]
     ADD R3, R2, #13
     ST R1, [R3]
-    ST R1, TEMP1
+    LD R3, TEMP1
+    ST R1, [R3]
     MOV R1, #8
     ADD R1, R1, R1  ; 16
     ADD R1, R1, R1  ; 32
-    LD R1, TEMP1
+    LD R3, TEMP1
+    LD R1, [R3]
     ADD R3, R2, #14
     ST R1, [R3]
-    ST R1, TEMP1
+    LD R3, TEMP1
+    ST R1, [R3]
     MOV R1, #8
     ADD R1, R1, R1  ; 16
     ADD R1, R1, R1  ; 32
-    LD R1, TEMP1
+    LD R3, TEMP1
+    LD R1, [R3]
     ADD R3, R2, #15
     ST R1, [R3]
     LD R1, TEMP1
@@ -228,54 +260,66 @@ RTC_WAIT:
     ST R1, TEMP1
     ST R3, TEMP3
     LD R2, LCD_BASE
-    ST R1, TEMP1
+    LD R3, TEMP1
+    ST R1, [R3]
     MOV R1, #10
     ADD R1, R1, R1  ; 20
     ADD R1, R1, R1  ; 40
     ADD R1, R1, R1  ; 80
     ADD R1, R1, #4  ; 84
-    LD R1, TEMP1
+    LD R3, TEMP1
+    LD R1, [R3]
     ST R1, [R2]
-    ST R1, TEMP1
+    LD R3, TEMP1
+    ST R1, [R3]
     MOV R1, #12
     ADD R1, R1, R1  ; 24
     ADD R1, R1, R1  ; 48
     ADD R1, R1, R1  ; 96
     ADD R1, R1, #9  ; 105
-    LD R1, TEMP1
+    LD R3, TEMP1
+    LD R1, [R3]
     ADD R3, R2, #1
     ST R1, [R3]
-    ST R1, TEMP1
+    LD R3, TEMP1
+    ST R1, [R3]
     MOV R1, #12
     ADD R1, R1, R1  ; 24
     ADD R1, R1, R1  ; 48
     ADD R1, R1, R1  ; 96
     ADD R1, R1, #13  ; 109
-    LD R1, TEMP1
+    LD R3, TEMP1
+    LD R1, [R3]
     ADD R3, R2, #2
     ST R1, [R3]
-    ST R1, TEMP1
+    LD R3, TEMP1
+    ST R1, [R3]
     MOV R1, #12
     ADD R1, R1, R1  ; 24
     ADD R1, R1, R1  ; 48
     ADD R1, R1, R1  ; 96
     ADD R1, R1, #5  ; 101
-    LD R1, TEMP1
+    LD R3, TEMP1
+    LD R1, [R3]
     ADD R3, R2, #3
     ST R1, [R3]
-    ST R1, TEMP1
+    LD R3, TEMP1
+    ST R1, [R3]
     MOV R1, #14
     ADD R1, R1, R1  ; 28
     ADD R1, R1, R1  ; 56
     ADD R1, R1, #2  ; 58
-    LD R1, TEMP1
+    LD R3, TEMP1
+    LD R1, [R3]
     ADD R3, R2, #4
     ST R1, [R3]
-    ST R1, TEMP1
+    LD R3, TEMP1
+    ST R1, [R3]
     MOV R1, #8
     ADD R1, R1, R1  ; 16
     ADD R1, R1, R1  ; 32
-    LD R1, TEMP1
+    LD R3, TEMP1
+    LD R1, [R3]
     ADD R3, R2, #5
     ST R1, [R3]
     LD R1, TEMP1
@@ -295,12 +339,14 @@ RTC_WAIT:
     ST R1, TEMP1
     ST R3, TEMP3
 ; Print ':'
-    ST R1, TEMP1
+    LD R3, TEMP1
+    ST R1, [R3]
     MOV R1, #14
     ADD R1, R1, R1  ; 28
     ADD R1, R1, R1  ; 56
     ADD R1, R1, #2  ; 58
-    LD R1, TEMP1
+    LD R3, TEMP1
+    LD R1, [R3]
     ADD R3, R2, #2
     ST R1, [R3]
     LD R1, TEMP1
@@ -313,12 +359,14 @@ RTC_WAIT:
     ST R1, TEMP1
     ST R3, TEMP3
 ; Print ':'
-    ST R1, TEMP1
+    LD R3, TEMP1
+    ST R1, [R3]
     MOV R1, #14
     ADD R1, R1, R1  ; 28
     ADD R1, R1, R1  ; 56
     ADD R1, R1, #2  ; 58
-    LD R1, TEMP1
+    LD R3, TEMP1
+    LD R1, [R3]
     ADD R3, R2, #5
     ST R1, [R3]
     LD R1, TEMP1

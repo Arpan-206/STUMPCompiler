@@ -125,7 +125,13 @@ class StumpMacroCompiler:
         # Save register to memory before use
         temp_map = {"R1": "TEMP1", "R2": "TEMP2", "R3": "TEMP3", "R4": "TEMP4", "R5": "TEMP5", "R6": "TEMP6"}
         if reg in temp_map:
-            result.append(f"    ST {reg}, {temp_map[reg]}")
+            # Use an intermediate scratch register to perform memory writes via
+            # an address load. This avoids assembler "offset out of range"
+            # errors with direct absolute stores. Prefer R3 unless it's the
+            # register we're saving, in which case use R4.
+            scratch = 'R3' if reg != 'R3' else 'R4'
+            result.append(f"    LD {scratch}, {temp_map[reg]}")
+            result.append(f"    ST {reg}, [{scratch}]")
 
         if value <= 15:
             result.append(f"    MOV {reg}, #{value}")
@@ -197,9 +203,11 @@ class StumpMacroCompiler:
                     else:
                         result.append(f"    ADD {reg}, {reg}, #15  ; {current + 15}")
                         current += 15
-        # Restore register from memory after use
+        # Restore register from memory after use (via scratch)
         if reg in temp_map:
-            result.append(f"    LD {reg}, {temp_map[reg]}")
+            scratch = 'R3' if reg != 'R3' else 'R4'
+            result.append(f"    LD {scratch}, {temp_map[reg]}")
+            result.append(f"    LD {reg}, [{scratch}]")
         return result
     
     def macro_print_string(self, args):
