@@ -64,6 +64,10 @@ class StumpMacroCompiler:
             return self.macro_clear_lcd(args)
         if name == 'DELAY':
             return self.macro_delay(args)
+        if name == 'SAVE_REG':
+            return self.macro_save_reg(args)
+        if name == 'RESTORE_REG':
+            return self.macro_restore_reg(args)
         return [f"; Unknown macro: {name}"]
 
     def macro_num_to_ascii(self, args):
@@ -189,6 +193,58 @@ class StumpMacroCompiler:
             "    SUB R5, R5, #1",
             "    BNE DELAY_OUTER"
         ]
+
+    # --- New: save/restore helpers and macros ---
+    def _get_label_id(self):
+        """Return a short unique id for local labels."""
+        # lightweight unique id based on a counter attribute
+        if not hasattr(self, '_lid'):
+            self._lid = 0
+        self._lid += 1
+        return str(self._lid)
+
+    def _load_label_nearby(self, label, dest):
+        """Emit lines that define a nearby pointer to `label` and load it into `dest`.
+
+        Produces:
+          __PTR_<label>_<id>: DEFW <label>
+          LD <dest>, __PTR_<label>_<id>
+        This keeps the PC-relative LD within range.
+        """
+        lid = self._get_label_id()
+        ptr = f"__PTR_{label}_{lid}"
+        return [f"{ptr}:    DEFW {label}", f"    LD {dest}, {ptr}"]
+
+    def macro_save_reg(self, args):
+        """Save register to a designated label.
+
+        Syntax: @SAVE_REG <reg> <label>
+        Emits: nearby pointer DEFW, LD scratch, ptr; ST <reg>, [scratch]
+        """
+        if len(args) != 2:
+            return ["; Error: @SAVE_REG needs <reg> <label>"]
+        reg = args[0]
+        label = args[1]
+        # pick scratch R3 (minimal compiler; could be smarter)
+        lines = []
+        lines.extend(self._load_label_nearby(label, 'R3'))
+        lines.append(f"    ST {reg}, [R3]")
+        return lines
+
+    def macro_restore_reg(self, args):
+        """Restore register from a designated label.
+
+        Syntax: @RESTORE_REG <reg> <label>
+        Emits: nearby pointer DEFW, LD scratch, ptr; LD <reg>, [scratch]
+        """
+        if len(args) != 2:
+            return ["; Error: @RESTORE_REG needs <reg> <label>"]
+        reg = args[0]
+        label = args[1]
+        lines = []
+        lines.extend(self._load_label_nearby(label, 'R3'))
+        lines.append(f"    LD {reg}, [R3]")
+        return lines
 
 def main():
     if len(sys.argv) != 2:
