@@ -22,11 +22,14 @@ RTC_CONTROL:  DEFW 0xFF9F
 START:
     ; Clear the LCD display
 ; Clear LCD
-    LD R4, TEMP1
+__TMP_R1_2:    DEFW 0
+    LD R4, __TMP_R1_2
     ST R1, [R4]
-    LD R4, TEMP2
+__TMP_R2_2:    DEFW 0
+    LD R4, __TMP_R2_2
     ST R2, [R4]
-    LD R4, TEMP3
+__TMP_R3_2:    DEFW 0
+    LD R4, __TMP_R3_2
     ST R3, [R4]
     LD R2, LCD_BASE
     MOV R1, #8
@@ -44,111 +47,123 @@ CLEAR_LOOP2_1:
     ADD R2, R2, #1
     SUB R3, R3, #1
     BNE CLEAR_LOOP2_1
-    LD R4, TEMP1
+    LD R4, __TMP_R1_2
     LD R1, [R4]
-    LD R4, TEMP2
+    LD R4, __TMP_R2_2
     LD R2, [R4]
-    LD R4, TEMP3
+    LD R4, __TMP_R3_2
     LD R3, [R4]
 
     ; Display "Clock v1.0" on first line
 ; Print string: "   CLOCK v1.0   "
-    LD R4, TEMP1
+__TMP_R1_3:    DEFW 0
+    LD R4, __TMP_R1_3
     ST R1, [R4]
-    LD R4, TEMP3
+__TMP_R3_3:    DEFW 0
+    LD R4, __TMP_R3_3
     ST R3, [R4]
     LD R2, LCD_BASE
-    LD R3, TEMP1
+__TMP_R1_4:    DEFW 0
+    LD R3, __TMP_R1_4
     ST R1, [R3]
     MOV R1, #8
     ADD R1, R1, R1  ; 16
     ADD R1, R1, R1  ; 32
-    LD R3, TEMP1
+    LD R3, __TMP_R1_4
     LD R1, [R3]
     ST R1, [R2]
-    LD R3, TEMP1
+__TMP_R1_5:    DEFW 0
+    LD R3, __TMP_R1_5
     ST R1, [R3]
     MOV R1, #8
     ADD R1, R1, R1  ; 16
     ADD R1, R1, R1  ; 32
-    LD R3, TEMP1
+    LD R3, __TMP_R1_5
     LD R1, [R3]
     ADD R3, R2, #1
     ST R1, [R3]
-    LD R3, TEMP1
+__TMP_R1_6:    DEFW 0
+    LD R3, __TMP_R1_6
     ST R1, [R3]
     MOV R1, #8
     ADD R1, R1, R1  ; 16
     ADD R1, R1, R1  ; 32
-    LD R3, TEMP1
+    LD R3, __TMP_R1_6
     LD R1, [R3]
     ADD R3, R2, #2
     ST R1, [R3]
-    LD R3, TEMP1
+__TMP_R1_7:    DEFW 0
+    LD R3, __TMP_R1_7
     ST R1, [R3]
     MOV R1, #8
     ADD R1, R1, R1  ; 16
     ADD R1, R1, R1  ; 32
     ADD R1, R1, R1  ; 64
     ADD R1, R1, #3  ; 67
-    LD R3, TEMP1
+    LD R3, __TMP_R1_7
     LD R1, [R3]
     ADD R3, R2, #3
     ST R1, [R3]
-    LD R3, TEMP1
+__TMP_R1_8:    DEFW 0
+    LD R3, __TMP_R1_8
     ST R1, [R3]
     MOV R1, #8
     ADD R1, R1, R1  ; 16
     ADD R1, R1, R1  ; 32
     ADD R1, R1, R1  ; 64
     ADD R1, R1, #12  ; 76
-    LD R3, TEMP1
+    LD R3, __TMP_R1_8
     LD R1, [R3]
     ADD R3, R2, #4
     ST R1, [R3]
-    LD R3, TEMP1
+__TMP_R1_9:    DEFW 0
+    LD R3, __TMP_R1_9
     ST R1, [R3]
     MOV R1, #8
     ADD R1, R1, R1  ; 16
     ADD R1, R1, R1  ; 32
     ADD R1, R1, R1  ; 64
     ADD R1, R1, #15  ; 79
-    LD R3, TEMP1
+    LD R3, __TMP_R1_9
     LD R1, [R3]
     ADD R3, R2, #5
     ST R1, [R3]
-    LD R3, TEMP1
+__TMP_R1_10:    DEFW 0
+    LD R3, __TMP_R1_10
     ST R1, [R3]
     MOV R1, #8
     ADD R1, R1, R1  ; 16
     ADD R1, R1, R1  ; 32
     ADD R1, R1, R1  ; 64
     ADD R1, R1, #3  ; 67
-    LD R3, TEMP1
+    LD R3, __TMP_R1_10
     LD R1, [R3]
     ADD R3, R2, #6
     ST R1, [R3]
-    LD R3, TEMP1
+__TMP_R1_11:    DEFW 0
+    LD R3, __TMP_R1_11
     ST R1, [R3]
     MOV R1, #8
     ADD R1, R1, R1  ; 16
     ADD R1, R1, R1  ; 32
     ADD R1, R1, R1  ; 64
     ADD R1, R1, #11  ; 75
-    LD R3, TEMP1
+    LD R3, __TMP_R1_11
     LD R1, [R3]
     ADD R3, R2, #7
     ST R1, [R3]
-    LD R3, TEMP1
+__TMP_R1_12:    DEFW 0
+    LD R3, __TMP_R1_12
     ST R1, [R3]
     MOV R1, #8
     ADD R1, R1, R1  ; 16
     ADD R1, R1, R1  ; 32
-    LD R3, TEMP1
+    LD R3, __TMP_R1_12
     LD R1, [R3]
     ADD R3, R2, #8
     ST R1, [R3]
-    LD R3, TEMP1
+__TMP_R1_13:    DEFW 0
+    LD R3, __TMP_R1_13
     ST R1, [R3]
     MOV R1, #15
     ADD R1, R1, #15  ; 30
@@ -158,88 +173,96 @@ CLEAR_LOOP2_1:
     ADD R1, R1, #15  ; 90
     ADD R1, R1, #15  ; 105
     ADD R1, R1, #13  ; 118
-    LD R3, TEMP1
+    LD R3, __TMP_R1_13
     LD R1, [R3]
     ADD R3, R2, #9
     ST R1, [R3]
-    LD R3, TEMP1
+__TMP_R1_14:    DEFW 0
+    LD R3, __TMP_R1_14
     ST R1, [R3]
     MOV R1, #12
     ADD R1, R1, R1  ; 24
     ADD R1, R1, R1  ; 48
     ADD R1, R1, #1
-    LD R3, TEMP1
+    LD R3, __TMP_R1_14
     LD R1, [R3]
     ADD R3, R2, #10
     ST R1, [R3]
-    LD R3, TEMP1
+__TMP_R1_15:    DEFW 0
+    LD R3, __TMP_R1_15
     ST R1, [R3]
     MOV R1, #15
     ADD R1, R1, #15  ; 30
     ADD R1, R1, #15  ; 45
     ADD R1, R1, #1  ; 46
-    LD R3, TEMP1
+    LD R3, __TMP_R1_15
     LD R1, [R3]
     ADD R3, R2, #11
     ST R1, [R3]
-    LD R3, TEMP1
+__TMP_R1_16:    DEFW 0
+    LD R3, __TMP_R1_16
     ST R1, [R3]
     MOV R1, #12
     ADD R1, R1, R1  ; 24
     ADD R1, R1, R1  ; 48
-    LD R3, TEMP1
+    LD R3, __TMP_R1_16
     LD R1, [R3]
     ADD R3, R2, #12
     ST R1, [R3]
-    LD R3, TEMP1
+__TMP_R1_17:    DEFW 0
+    LD R3, __TMP_R1_17
     ST R1, [R3]
     MOV R1, #8
     ADD R1, R1, R1  ; 16
     ADD R1, R1, R1  ; 32
-    LD R3, TEMP1
+    LD R3, __TMP_R1_17
     LD R1, [R3]
     ADD R3, R2, #13
     ST R1, [R3]
-    LD R3, TEMP1
+__TMP_R1_18:    DEFW 0
+    LD R3, __TMP_R1_18
     ST R1, [R3]
     MOV R1, #8
     ADD R1, R1, R1  ; 16
     ADD R1, R1, R1  ; 32
-    LD R3, TEMP1
+    LD R3, __TMP_R1_18
     LD R1, [R3]
     ADD R3, R2, #14
     ST R1, [R3]
-    LD R3, TEMP1
+__TMP_R1_19:    DEFW 0
+    LD R3, __TMP_R1_19
     ST R1, [R3]
     MOV R1, #8
     ADD R1, R1, R1  ; 16
     ADD R1, R1, R1  ; 32
-    LD R3, TEMP1
+    LD R3, __TMP_R1_19
     LD R1, [R3]
     ADD R3, R2, #15
     ST R1, [R3]
-    LD R4, TEMP1
+    LD R4, __TMP_R1_3
     LD R1, [R4]
-    LD R4, TEMP3
+    LD R4, __TMP_R3_3
     LD R3, [R4]
 
     ; Small startup delay
 ; Delay
-    LD R3, TEMP5
+__TMP_R5_21:    DEFW 0
+    LD R3, __TMP_R5_21
     ST R5, [R3]
-    LD R3, TEMP6
+__TMP_R6_21:    DEFW 0
+    LD R3, __TMP_R6_21
     ST R6, [R3]
     MOV R5, #15
-DELAY_OUTER_2:
+DELAY_OUTER_20:
     MOV R6, #15
-DELAY_INNER_2:
+DELAY_INNER_20:
     SUB R6, R6, #1
-    BNE DELAY_INNER_2
+    BNE DELAY_INNER_20
     SUB R5, R5, #1
-    BNE DELAY_OUTER_2
-    LD R3, TEMP5
+    BNE DELAY_OUTER_20
+    LD R3, __TMP_R5_21
     LD R5, [R3]
-    LD R3, TEMP6
+    LD R3, __TMP_R6_21
     LD R6, [R3]
 
 MAIN_LOOP:
@@ -271,76 +294,84 @@ RTC_WAIT:
     ADD R2, R2, R3
     ADD R2, R2, #5      ; R2 now points to LCD line 2 (offset 20)
 ; Print string: "Time: "
-    LD R4, TEMP1
+__TMP_R1_22:    DEFW 0
+    LD R4, __TMP_R1_22
     ST R1, [R4]
-    LD R4, TEMP3
+__TMP_R3_22:    DEFW 0
+    LD R4, __TMP_R3_22
     ST R3, [R4]
     LD R2, LCD_BASE
-    LD R3, TEMP1
+__TMP_R1_23:    DEFW 0
+    LD R3, __TMP_R1_23
     ST R1, [R3]
     MOV R1, #10
     ADD R1, R1, R1  ; 20
     ADD R1, R1, R1  ; 40
     ADD R1, R1, R1  ; 80
     ADD R1, R1, #4  ; 84
-    LD R3, TEMP1
+    LD R3, __TMP_R1_23
     LD R1, [R3]
     ST R1, [R2]
-    LD R3, TEMP1
+__TMP_R1_24:    DEFW 0
+    LD R3, __TMP_R1_24
     ST R1, [R3]
     MOV R1, #12
     ADD R1, R1, R1  ; 24
     ADD R1, R1, R1  ; 48
     ADD R1, R1, R1  ; 96
     ADD R1, R1, #9  ; 105
-    LD R3, TEMP1
+    LD R3, __TMP_R1_24
     LD R1, [R3]
     ADD R3, R2, #1
     ST R1, [R3]
-    LD R3, TEMP1
+__TMP_R1_25:    DEFW 0
+    LD R3, __TMP_R1_25
     ST R1, [R3]
     MOV R1, #12
     ADD R1, R1, R1  ; 24
     ADD R1, R1, R1  ; 48
     ADD R1, R1, R1  ; 96
     ADD R1, R1, #13  ; 109
-    LD R3, TEMP1
+    LD R3, __TMP_R1_25
     LD R1, [R3]
     ADD R3, R2, #2
     ST R1, [R3]
-    LD R3, TEMP1
+__TMP_R1_26:    DEFW 0
+    LD R3, __TMP_R1_26
     ST R1, [R3]
     MOV R1, #12
     ADD R1, R1, R1  ; 24
     ADD R1, R1, R1  ; 48
     ADD R1, R1, R1  ; 96
     ADD R1, R1, #5  ; 101
-    LD R3, TEMP1
+    LD R3, __TMP_R1_26
     LD R1, [R3]
     ADD R3, R2, #3
     ST R1, [R3]
-    LD R3, TEMP1
+__TMP_R1_27:    DEFW 0
+    LD R3, __TMP_R1_27
     ST R1, [R3]
     MOV R1, #14
     ADD R1, R1, R1  ; 28
     ADD R1, R1, R1  ; 56
     ADD R1, R1, #2  ; 58
-    LD R3, TEMP1
+    LD R3, __TMP_R1_27
     LD R1, [R3]
     ADD R3, R2, #4
     ST R1, [R3]
-    LD R3, TEMP1
+__TMP_R1_28:    DEFW 0
+    LD R3, __TMP_R1_28
     ST R1, [R3]
     MOV R1, #8
     ADD R1, R1, R1  ; 16
     ADD R1, R1, R1  ; 32
-    LD R3, TEMP1
+    LD R3, __TMP_R1_28
     LD R1, [R3]
     ADD R3, R2, #5
     ST R1, [R3]
-    LD R4, TEMP1
+    LD R4, __TMP_R1_22
     LD R1, [R4]
-    LD R4, TEMP3
+    LD R4, __TMP_R3_22
     LD R3, [R4]
 
     ; Now display the actual time using the BCD values
@@ -354,48 +385,54 @@ RTC_WAIT:
 ; ERROR: Forbidden register used in @DISPLAY_BCD_BYTE: R10, R2
 
     ; Display first colon
-    LD R4, TEMP1
+__TMP_R1_29:    DEFW 0
+    LD R4, __TMP_R1_29
     ST R1, [R4]
-    LD R4, TEMP3
+__TMP_R3_29:    DEFW 0
+    LD R4, __TMP_R3_29
     ST R3, [R4]
 ; Print ':'
-    LD R3, TEMP1
+__TMP_R1_30:    DEFW 0
+    LD R3, __TMP_R1_30
     ST R1, [R3]
     MOV R1, #14
     ADD R1, R1, R1  ; 28
     ADD R1, R1, R1  ; 56
     ADD R1, R1, #2  ; 58
-    LD R3, TEMP1
+    LD R3, __TMP_R1_30
     LD R1, [R3]
     ADD R3, R2, #2
     ST R1, [R3]
-    LD R4, TEMP1
+    LD R4, __TMP_R1_29
     LD R1, [R4]
-    LD R4, TEMP3
+    LD R4, __TMP_R3_29
     LD R3, [R4]
 
     ; Display minutes (R11 contains BCD minutes)
 ; ERROR: Forbidden register used in @DISPLAY_BCD_BYTE: R11, R2
 
     ; Display second colon
-    LD R4, TEMP1
+__TMP_R1_31:    DEFW 0
+    LD R4, __TMP_R1_31
     ST R1, [R4]
-    LD R4, TEMP3
+__TMP_R3_31:    DEFW 0
+    LD R4, __TMP_R3_31
     ST R3, [R4]
 ; Print ':'
-    LD R3, TEMP1
+__TMP_R1_32:    DEFW 0
+    LD R3, __TMP_R1_32
     ST R1, [R3]
     MOV R1, #14
     ADD R1, R1, R1  ; 28
     ADD R1, R1, R1  ; 56
     ADD R1, R1, #2  ; 58
-    LD R3, TEMP1
+    LD R3, __TMP_R1_32
     LD R1, [R3]
     ADD R3, R2, #5
     ST R1, [R3]
-    LD R4, TEMP1
+    LD R4, __TMP_R1_31
     LD R1, [R4]
-    LD R4, TEMP3
+    LD R4, __TMP_R3_31
     LD R3, [R4]
 
     ; Display seconds (R12 contains BCD seconds)
@@ -403,21 +440,23 @@ RTC_WAIT:
 
     ; Short delay before next update
 ; Delay
-    LD R3, TEMP5
+__TMP_R5_34:    DEFW 0
+    LD R3, __TMP_R5_34
     ST R5, [R3]
-    LD R3, TEMP6
+__TMP_R6_34:    DEFW 0
+    LD R3, __TMP_R6_34
     ST R6, [R3]
     MOV R5, #15
-DELAY_OUTER_3:
+DELAY_OUTER_33:
     MOV R6, #15
-DELAY_INNER_3:
+DELAY_INNER_33:
     SUB R6, R6, #1
-    BNE DELAY_INNER_3
+    BNE DELAY_INNER_33
     SUB R5, R5, #1
-    BNE DELAY_OUTER_3
-    LD R3, TEMP5
+    BNE DELAY_OUTER_33
+    LD R3, __TMP_R5_34
     LD R5, [R3]
-    LD R3, TEMP6
+    LD R3, __TMP_R6_34
     LD R6, [R3]
 
     ; Loop forever

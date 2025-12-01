@@ -122,9 +122,11 @@ class StumpMacroCompiler:
             result.append(f"; ERROR: Attempt to use forbidden register {reg}")
             return result
 
-        # Save register to memory before use using centralized helper
+        # Save register to memory before use using a local temp pair so loads/stores
+        # reference a nearby label (avoids assembler offset-range errors).
         if reg in ["R1", "R2", "R3", "R4", "R5", "R6"]:
-            result.extend(self.save_regs([reg]))
+            prologue, epilogue = self.save_restore_pair([reg])
+            result.extend(prologue)
 
         if value <= 15:
             result.append(f"    MOV {reg}, #{value}")
@@ -196,9 +198,9 @@ class StumpMacroCompiler:
                     else:
                         result.append(f"    ADD {reg}, {reg}, #15  ; {current + 15}")
                         current += 15
-        # Restore register from memory after use using centralized helper
+        # Restore register from memory after use using the matching epilogue
         if reg in ["R1", "R2", "R3", "R4", "R5", "R6"]:
-            result.extend(self.restore_regs([reg]))
+            result.extend(epilogue)
         return result
 
     # --- Register save/restore helpers ---
@@ -238,6 +240,31 @@ class StumpMacroCompiler:
             lines.append(f"    LD {scratch}, {temp}")
             lines.append(f"    ST {reg}, [{scratch}]")
         return lines
+
+    def save_restore_pair(self, regs):
+        """Return (prologue_lines, epilogue_lines) that save and later restore regs.
+
+        For each reg in regs this emits a local DEFW label immediately before the
+        prologue so that subsequent `LD scratch, <label>` is PC-near and avoids
+        assembler "offset out of range" errors. The epilogue contains matching
+        LD/LD sequences to restore the registers.
+        """
+        lid = self._get_label_id()
+        prologue = []
+        epilogue = []
+        avoid = set(regs)
+        for reg in regs:
+            temp_label = f"__TMP_{reg}_{lid}"
+            # Define the temp word immediately so LD/ST are nearby
+            prologue.append(f"{temp_label}:    DEFW 0")
+            scratch = self._pick_scratch(avoid)
+            prologue.append(f"    LD {scratch}, {temp_label}")
+            prologue.append(f"    ST {reg}, [{scratch}]")
+            # Epilogue restores in the same way
+            scratch2 = self._pick_scratch(avoid)
+            epilogue.append(f"    LD {scratch2}, {temp_label}")
+            epilogue.append(f"    LD {reg}, [{scratch2}]")
+        return prologue, epilogue
 
     def restore_regs(self, regs):
         """Return list of assembly lines that restore each register in `regs` from its TEMPn.
@@ -286,8 +313,9 @@ class StumpMacroCompiler:
         lcd_reg = args[1]
         
         result = [f"; Print string: \"{string}\""]
-        # Save caller-volatile registers we will use
-        result.extend(self.save_regs(["R1", "R3"]))
+        # Save caller-volatile registers we will use (local temps)
+        prologue, epilogue = self.save_restore_pair(["R1", "R3"])
+        result.extend(prologue)
         result.append(f"    LD {lcd_reg}, LCD_BASE")
 
         for i, char in enumerate(string):
@@ -302,7 +330,7 @@ class StumpMacroCompiler:
                 else:
                     result.append(f"    ADD {lcd_reg}, {lcd_reg}, #1")
                     result.append(f"    ST R1, [{lcd_reg}]")
-        result.extend(self.restore_regs(["R1", "R3"]))
+        result.extend(epilogue)
         return result
     
     def macro_print_char(self, args):
@@ -315,8 +343,9 @@ class StumpMacroCompiler:
         offset = int(args[2])
         
         result = []
-        # Save registers we'll use
-        result.extend(self.save_regs(["R1", "R3"]))
+        # Save registers we'll use (local temps)
+        prologue, epilogue = self.save_restore_pair(["R1", "R3"])
+        result.extend(prologue)
 
         if char.startswith("'") and char.endswith("'"):
             ascii_val = ord(char[1])
@@ -336,7 +365,7 @@ class StumpMacroCompiler:
                 result.extend(addr_lines)
                 result.append(f"    ST R1, [R3]")
 
-        result.extend(self.restore_regs(["R1", "R3"]))
+        result.extend(epilogue)
         return result
     
     def macro_num_to_ascii(self, args):
@@ -369,8 +398,9 @@ class StumpMacroCompiler:
         result = [
             "; Clear LCD",
         ]
-        # Save registers we will clobber
-        result.extend(self.save_regs(["R1", "R2", "R3"]))
+        # Save registers we will clobber (local temps)
+        prologue, epilogue = self.save_restore_pair(["R1", "R2", "R3"])
+        result.extend(prologue)
         result.extend([
             "    LD R2, LCD_BASE",
             "    MOV R1, #8",
@@ -390,7 +420,7 @@ class StumpMacroCompiler:
             f"    BNE CLEAR_LOOP2_{lid}",
         ])
         # Restore saved registers
-        result.extend(self.restore_regs(["R1", "R2", "R3"]))
+        result.extend(epilogue)
         return result
     
     def macro_delay(self, args):
@@ -399,7 +429,8 @@ class StumpMacroCompiler:
         result = [
             "; Delay",
         ]
-        result.extend(self.save_regs(["R5", "R6"]))
+        prologue, epilogue = self.save_restore_pair(["R5", "R6"])
+        result.extend(prologue)
         result.extend([
             "    MOV R5, #15",
             f"DELAY_OUTER_{lid}:",
@@ -410,7 +441,7 @@ class StumpMacroCompiler:
             "    SUB R5, R5, #1",
             f"    BNE DELAY_OUTER_{lid}",
         ])
-        result.extend(self.restore_regs(["R5", "R6"]))
+        result.extend(epilogue)
         return result
     
     def macro_rtc_read(self, args):
