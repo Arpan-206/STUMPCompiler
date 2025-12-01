@@ -65,7 +65,12 @@ START:
 __PTR_TEMP1_1:    DEFW TEMP1
     LD R3, __PTR_TEMP1_1
     ST R1, [R3]
-    MOV R1, #65        ; put 'A' (value) in R1 to simulate clobber
+    ; put 'A' (65) in R1 using the macro
+    MOV R1, #15
+    ADD R1, R1, #15
+    ADD R1, R1, #15
+    ADD R1, R1, #15
+    ADD R1, R1, #5
 ; Print string: "A"
     LD R2, LCD_BASE
     MOV R1, #15

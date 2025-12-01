@@ -15,7 +15,8 @@ START:
     ; Put a known value in R1, save it to TEMP1, clobber R1, then restore
     MOV R1, #7
     @SAVE_REG R1 TEMP1
-    MOV R1, #65        ; put 'A' (value) in R1 to simulate clobber
+    ; put 'A' (65) in R1 using the macro
+    @LOAD_IMMEDIATE R1 65
     @PRINT_STRING "A" R2
     @RESTORE_REG R1 TEMP1
 

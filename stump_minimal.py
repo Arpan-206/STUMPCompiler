@@ -68,6 +68,8 @@ class StumpMacroCompiler:
             return self.macro_save_reg(args)
         if name == 'RESTORE_REG':
             return self.macro_restore_reg(args)
+        if name == 'LOAD_IMMEDIATE' or name == 'MOV_IMM':
+            return self.macro_load_immediate(args)
         return [f"; Unknown macro: {name}"]
 
     def macro_num_to_ascii(self, args):
@@ -245,6 +247,30 @@ class StumpMacroCompiler:
         lines.extend(self._load_label_nearby(label, 'R3'))
         lines.append(f"    LD {reg}, [R3]")
         return lines
+
+    def macro_load_immediate(self, args):
+        """Load an arbitrary integer into a register.
+
+        Syntax: @LOAD_IMMEDIATE <reg> <value>
+                @MOV_IMM <reg> <value>
+
+        <value> may be a decimal number or prefixed with `#` (e.g. `#65`).
+        """
+        if len(args) != 2:
+            return ["; Error: @LOAD_IMMEDIATE needs <reg> <value>"]
+        dest = args[0]
+        val_s = args[1]
+        try:
+            if isinstance(val_s, str) and val_s.startswith('#'):
+                value = int(val_s[1:])
+            else:
+                value = int(val_s)
+        except Exception:
+            return [f"; Error: invalid immediate value: {val_s}"]
+
+        # Reuse existing build_value routine to emit the minimal instruction
+        # sequence to form the requested immediate in the destination.
+        return self.build_value(value, dest)
 
 def main():
     if len(sys.argv) != 2:
